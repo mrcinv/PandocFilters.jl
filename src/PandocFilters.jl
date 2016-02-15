@@ -1,0 +1,5 @@
+module PandocFilters
+
+# package code goes here
+
+end # module
