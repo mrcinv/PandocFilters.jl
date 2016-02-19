@@ -5,6 +5,7 @@ using FactCheck
 facts("Testing walk with (t,c)->1") do
     action(t,c) = 1
     @fact walk(1,action) --> 1
+    @fact walk(["string1","string2"],action) --> ["string1","string2"]
     @fact walk([1,2,3],action) --> [1,2,3]
     @fact walk(Dict("x"=>2,"y"=>3),action) --> Dict("x"=>2,"y"=>3)
     @fact walk([Dict("t"=>2,"c"=>3)],action) --> [1]

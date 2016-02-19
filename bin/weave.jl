@@ -1,14 +1,14 @@
 #!/usr/bin/env julia
 
-using PandocFilters: Str
+using PandocFilters
 
 const defaults = Dict(
                       "Code" => Dict(
-                                     "hide"=>false,
+                                     "hide"=>true,
                                      "display"=>true
                                      ),
                       "CodeBlock" => Dict(
-                                          "hide"=>false,
+                                          "hide"=>true,
                                           "display"=>false
                                           )
                       )
@@ -22,10 +22,10 @@ function proccess_code(t,c,format,meta)
         option = merge(options,keywords)
         response = []
         if !options["hide"]
-            append!(response, [Dict("t"=>t,"c"=>c)])
+          #append!(response, [Dict("t"=>t,"c"=>c)])
         end
         if options["display"]
-            append!(response, [Str(string(eval(parse(code))))])
+            append!(response, [eval(parse(code))])
         end
         n = length(response)
         if n==1
