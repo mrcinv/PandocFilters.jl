@@ -17,6 +17,8 @@ using JSON
 Type representing Pandoc elements.
 """
 type PandocElement
+  t::ASCIIString
+  c::Union{AbstractString,Array,Dict}
 end
 
 """
@@ -28,23 +30,27 @@ function walk(x :: Any, action :: Function)
     return x
 end
 
-function walk(array :: Array, action :: Function)
-    [walk(elt,action) for elt in array]
+function walk(x :: Array, action :: Function)
+  array = []
+    for item in x
+      if (typeof(item)<:Dict) && haskey(item,"t")
+        res = action(item["t"], item["c"])
+        if res == nothing
+          append!(array, [walk(item, action)])
+        elseif typeof(res)<:Array
+          append!(array, walk(res, action))
+        else
+          append!(array, [walk(res, action)])
+        end
+      else
+        append!(array, [walk(item, action)])
+      end #if
+    end #for
+  return array
 end
 
 function walk(dict :: Dict, action :: Function)
-    if haskey(dict,"t") & haskey(dict, "c")
-        result = action(dict["t"],dict["c"])
-        if result == nothing
-            Dict("t"=>dict["t"], "c" => walk(dict["c"],action))
-        elseif (typeof(result) <: Dict) && haskey(result,"t") && haskey(result,"c")
-            Dict("t"=>result["t"], "c"=>walk(result["c"],action))
-        else
-            walk(result,action)
-        end
-    else
-        [key=>walk(value,action) for (key,value) in dict]
-    end
+    [key=>walk(value,action) for (key,value) in dict]
 end
 
 """
@@ -63,18 +69,18 @@ be replaced.    If it returns a list, the list will be spliced in to
 the list to which the target object belongs.    (So, returning an
 empty list deletes the object.)
 """
-function toJSONFilter(action::Function)
-  toJSONFilter([action])
+function filter(action::Function)
+  filter([action])
 end
 
-function toJSONFilter(actions::Array{Function})
+function filter(actions::Array{Function})
   doc = JSON.parse(STDIN)
   format = (length(ARGS) <= 0)? "" : ARGS[1]
   meta = doc[1]["unMeta"]
   for action in actions
-    json = walk(json, (t,c)->action(t,c,format,meta))
+    doc = walk(doc, (t,c)->action(t,c,format,meta))
   end
-  JSON.print(STDOUT, json)
+  JSON.print(STDOUT, doc)
 end
 
 
